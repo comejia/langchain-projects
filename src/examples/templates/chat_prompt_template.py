@@ -5,6 +5,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
     ("human", "{text}")
 ])
 
+# Test chat
 messages = chat_prompt.format_messages(text="Hola, ¿cómo estás?")
 
 for message in messages:
