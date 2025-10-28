@@ -1,9 +1,11 @@
 from langchain_core.prompts import ChatPromptTemplate
 
-chat_prompt = ChatPromptTemplate.from_messages([
-    ("system", "Eres un traductor del español al inglés muy preciso."),
-    ("human", "{text}")
-])
+chat_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "Eres un traductor del español al inglés muy preciso."),
+        ("human", "{text}"),
+    ]
+)
 
 # Test chat
 messages = chat_prompt.format_messages(text="Hola, ¿cómo estás?")

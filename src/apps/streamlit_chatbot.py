@@ -1,6 +1,5 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from langchain.prompts import PromptTemplate
 from langchain.prompts import ChatPromptTemplate
 import streamlit as st
 from dotenv import load_dotenv
@@ -27,18 +26,16 @@ with st.sidebar:
         "Personalidad del Asistente",
         [
             "Útil y amigable",
-            "Profesional y formal", 
+            "Profesional y formal",
             "Casual y relajado",
             "Experto técnico",
-            "Creativo y divertido"
-        ]
+            "Creativo y divertido",
+        ],
     )
 
     # Recrear modelo
     chat_model = ChatOpenAI(
-        model=model_name,
-        temperature=temperature,
-        api_key=openai_api_key
+        model=model_name, temperature=temperature, api_key=openai_api_key
     )
 
     # Template dinámico basado en personalidad
@@ -47,14 +44,19 @@ with st.sidebar:
         "Profesional y formal": "Eres un asistente profesional y formal. Proporciona respuestas precisas y bien estructuradas.",
         "Casual y relajado": "Eres un asistente casual y relajado. Habla de forma natural y amigable, como un buen amigo.",
         "Experto técnico": "Eres un asistente experto técnico. Proporciona respuestas detalladas con precisión técnica.",
-        "Creativo y divertido": "Eres un asistente creativo y divertido. Usa analogías, ejemplos creativos y mantén un tono alegre."
+        "Creativo y divertido": "Eres un asistente creativo y divertido. Usa analogías, ejemplos creativos y mantén un tono alegre.",
     }
 
     # ChatPromptTemplate con personalidad dinámica
-    chat_prompt_template = ChatPromptTemplate.from_messages([
-        ("system", system_messages[personality]),
-        ("human", "Historial de conversación:\n{history}\n\nPregunta actual: {message}")
-    ])
+    chat_prompt_template = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_messages[personality]),
+            (
+                "human",
+                "Historial de conversación:\n{history}\n\nPregunta actual: {message}",
+            ),
+        ]
+    )
 
     # Cadena usando LCEL (LangChain Expression Language)
     chain = chat_prompt_template | chat_model
@@ -68,7 +70,7 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     if isinstance(message, SystemMessage):
         continue
-    
+
     role = "assistant" if isinstance(message, AIMessage) else "user"
 
     with st.chat_message(role):
@@ -91,11 +93,15 @@ if input:
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
             full_response = ""
- 
+
             # Streaming de la respuesta
-            for chunk in chain.stream({"message": input, "history": st.session_state.messages}):
+            for chunk in chain.stream(
+                {"message": input, "history": st.session_state.messages}
+            ):
                 full_response += chunk.content
-                response_placeholder.markdown(full_response + "▌")  # El cursor parpadeante
+                response_placeholder.markdown(
+                    full_response + "▌"
+                )  # El cursor parpadeante
 
             response_placeholder.markdown(full_response)
 
@@ -105,4 +111,3 @@ if input:
 
     except Exception as e:
         st.error(f"Error al generar respuesta: {str(e)}")
-
