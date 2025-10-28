@@ -1,4 +1,8 @@
-from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
 
 # Prompt del sistema - Define el rol y criterios del reclutador experto
 SISTEMA_PROMPT = SystemMessagePromptTemplate.from_template(
@@ -48,10 +52,8 @@ Sé preciso, objetivo y constructivo en tu análisis."""
 )
 
 # Prompt completo combinado - Listo para usar
-CHAT_PROMPT = ChatPromptTemplate.from_messages([
-    SISTEMA_PROMPT,
-    ANALISIS_PROMPT
-])
+CHAT_PROMPT = ChatPromptTemplate.from_messages([SISTEMA_PROMPT, ANALISIS_PROMPT])
+
 
 def create_system_prompts():
     """Crea el sistema de prompts especializado para análisis de CVs"""

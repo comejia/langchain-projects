@@ -15,6 +15,7 @@ model_config = {
     "temperature": 0.2,
 }
 
+
 def create_cv_evaluator():
     model = ChatOpenAI(**model_config)
 
@@ -24,13 +25,14 @@ def create_cv_evaluator():
 
     return chain
 
+
 def evaluate_candidate(cv: str, job_description: str) -> CVAnalyzer:
     try:
         chain = create_cv_evaluator()
 
         result = chain.invoke({"texto_cv": cv, "descripcion_puesto": job_description})
         return result
-    except Exception as e:
+    except Exception:
         return CVAnalyzer(
             name="Error en procesamiento.",
             experience_year=0,
@@ -39,5 +41,5 @@ def evaluate_candidate(cv: str, job_description: str) -> CVAnalyzer:
             experience_key="",
             strengths=[],
             weaknesses=[],
-            adjustment_percentage=0
+            adjustment_percentage=0,
         )
