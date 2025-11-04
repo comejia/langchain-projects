@@ -1,0 +1,19 @@
+name: Ruff
+
+on: [ push, pull_request ]
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ruff Linter
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: check --fix --output-format=github
+
+      - name: Ruff format
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: format --output-format=github
