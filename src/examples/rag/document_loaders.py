@@ -7,6 +7,7 @@ loader = PyPDFLoader(
 
 pages = loader.load()
 
+
 for i, page in enumerate(pages):
     print(f"=== Pagina {i+1} ===")
     print(f"Contenido: {page.page_content}")
