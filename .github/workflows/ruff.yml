@@ -11,9 +11,9 @@ jobs:
       - name: Ruff Linter
         uses: astral-sh/ruff-action@v3
         with:
-          args: check --fix --output-format=github
+          args: check --fix --exit-non-zero-on-fix --format=github
 
       - name: Ruff format
         uses: astral-sh/ruff-action@v3
         with:
-          args: format --output-format=github
+          args: format --check --format=github
