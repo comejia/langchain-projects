@@ -1,4 +1,4 @@
-from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader, GoogleDriveLoader
+from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader
 
 
 loader = PyPDFLoader(
@@ -7,9 +7,8 @@ loader = PyPDFLoader(
 
 pages = loader.load()
 
-
 for i, page in enumerate(pages):
-    print(f"=== Pagina {i+1} ===")
+    print(f"=== Pagina {i + 1} ===")
     print(f"Contenido: {page.page_content}")
     print(f"Metadatos: {page.metadata}")
 
