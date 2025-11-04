@@ -1,6 +1,9 @@
-from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader
+from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader, GoogleDriveLoader
 
-loader = PyPDFLoader("/home/comejia/projects/langchain-project/src/examples/rag/Profile.pdf")
+
+loader = PyPDFLoader(
+    "/home/comejia/projects/langchain-project/src/examples/rag/Profile.pdf"
+)
 
 pages = loader.load()
 

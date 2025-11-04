@@ -1,6 +1,8 @@
 from langchain_google_community import GoogleDriveLoader
 
-credentials_path = "/home/comejia/projects/langchain-project/src/examples/rag/credentials.json"
+credentials_path = (
+    "/home/comejia/projects/langchain-project/src/examples/rag/credentials.json"
+)
 token_path = "/home/comejia/projects/langchain-project/src/examples/rag/token.json"
 
 loader = GoogleDriveLoader(
