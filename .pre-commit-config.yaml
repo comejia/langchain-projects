@@ -4,7 +4,8 @@ repos:
     rev: 0.9.6
     hooks:
       - id: uv-export
-        args: [ --no-dev, --locked, --output-file requirements.txt ]
+        always_run: true
+        args: [ --no-dev, --locked, --output-file, requirements.txt ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
