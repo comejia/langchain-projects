@@ -16,3 +16,4 @@ repos:
     rev: 0.9.6
     hooks:
       - id: uv-export
+        args: [ --no-dev ]
