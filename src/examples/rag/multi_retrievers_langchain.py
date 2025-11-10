@@ -13,7 +13,6 @@ openai_model = os.getenv("OPENAI_MODEL")
 embedding = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 llm = ChatOpenAI(model=openai_model, temperature=0, api_key=openai_api_key)
 
-
 vector_db = Chroma(
     embedding_function=embedding,
     persist_directory="/home/comejia/projects/langchain-project/src/examples/rag/chroma_db",
