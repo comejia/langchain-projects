@@ -15,3 +15,5 @@ credentials.json
 token.json
 
 *.pdf
+
+chroma_db/
