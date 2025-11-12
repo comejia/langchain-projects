@@ -2,12 +2,15 @@ from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.retrievers import EnsembleRetriever
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-from config.settings import settings
+from src.config.settings import settings
 from prompts import MULTI_QUERY_PROMPT, RAG_TEMPLATE
+import streamlit as st
 
 
+@st.cache_resource
 def init_rag_system():
     # Models
     embeddings = OpenAIEmbeddings(
@@ -26,7 +29,7 @@ def init_rag_system():
         persist_directory=settings.db_path,
     )
 
-    # Retriever MMR
+    # Retriever base MMR
     base_retriever = vector_db.as_retriever(
         search_type=settings.search_type,
         search_kwargs={
@@ -36,12 +39,31 @@ def init_rag_system():
         },
     )
 
+    # Retriever adicional
+    similarity_retriever = vector_db.as_retriever(
+        search_type="similarity",
+        search_kwargs={
+            "k": settings.search_k,
+        },
+    )
+
     # MultiQueryRetriever con prompt personalizado
     multi_query_prompt = PromptTemplate.from_template(MULTI_QUERY_PROMPT)
 
     mmr_multi_retriever = MultiQueryRetriever.from_llm(
         retriever=base_retriever, llm=llm_queries, prompt=multi_query_prompt
     )
+
+    # Ensemble Retriever si está habilitado
+    if settings.enable_hybrid_search:
+        ensemble_retriever = EnsembleRetriever(
+            retrievers=[mmr_multi_retriever, similarity_retriever],
+            weights=[0.7, 0.3],
+            # similarity_threshold=settings.similarity_threshold,
+        )
+        final_retriever = ensemble_retriever
+    else:
+        final_retriever = mmr_multi_retriever
 
     prompt = PromptTemplate.from_template(RAG_TEMPLATE)
 
@@ -69,7 +91,7 @@ def init_rag_system():
 
     rag_chain = (
         {
-            "context": mmr_multi_retriever | format_docs,
+            "context": final_retriever | format_docs,
             "question": RunnablePassthrough(),
         }
         | prompt
@@ -77,4 +99,44 @@ def init_rag_system():
         | StrOutputParser()
     )
 
-    return rag_chain, mmr_multi_retriever
+    return rag_chain, final_retriever
+
+
+def query_rag(question):
+    try:
+        rag_chain, retriever = init_rag_system()
+
+        # Realizar la consulta
+        response = rag_chain.invoke(question)
+
+        # Obtener los documentos recuperados
+        docs = retriever.invoke(question)
+
+        docs_info = []
+        for i, doc in enumerate(docs[: settings.search_k], start=1):
+            doc_info = {
+                "fragment": i,
+                "content": doc.page_content[:1000]
+                if len(doc.page_content) > 1000
+                else doc.page_content,
+                "source": doc.metadata.get("source", "No especificado").split("/")[-1],
+                "page": doc.metadata.get("page", "No especificado"),
+            }
+            docs_info.append(doc_info)
+
+        return response, docs_info
+
+    except Exception as e:
+        error_msg = f"Error al procesar la consulta: {str(e)}"
+        return error_msg, []
+
+
+def get_retriever_info():
+    """Obtiene información sobre la configuración del retriever"""
+    return {
+        "tipo": settings.search_type.upper(),
+        "documentos": settings.search_k,
+        "diversidad": settings.mmr_diversity_lambda,
+        "candidatos": settings.mmr_fetch_k,
+        "umbral": None,
+    }

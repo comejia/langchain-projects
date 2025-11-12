@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     mmr_fetch_k: int = 20
     search_k: int = 2
 
+    # Retriever addtional
+    enable_hybrid_search: bool = True
+    similarity_threshold: float = 0.75
+
 
 settings = Settings()
 
