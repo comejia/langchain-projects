@@ -17,3 +17,5 @@ token.json
 *.pdf
 
 chroma_db/
+
+*.mp4
