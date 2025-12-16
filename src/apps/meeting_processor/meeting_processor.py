@@ -1,7 +1,8 @@
 from langgraph.graph import StateGraph, START, END
 from langchain_openai import ChatOpenAI
-from typing import TypedDict, List
+from typing import TypedDict, List, Annotated
 from src.config.settings import settings
+from operator import add
 
 
 llm = ChatOpenAI(model=settings.query_model, api_key=settings.api_key, temperature=0.3)
@@ -15,6 +16,7 @@ class State(TypedDict):
     action_items: List[str]  # Acciones y responsables
     minutes: str  # Minuta formal
     summary: str  # Resumen ejecutivo
+    logs: Annotated[List[str], add]
 
 
 # Nodos del workflow
@@ -33,7 +35,7 @@ def extract_participants(state: State) -> State:
     response = llm.invoke(prompt)
     participants = [p.strip() for p in response.content.split(",") if p.strip()]
 
-    return {"participants": participants}
+    return {"participants": participants, "logs": ["Paso 1 completado"]}
 
 
 def identify_topics(state: State) -> State:
@@ -51,7 +53,7 @@ def identify_topics(state: State) -> State:
     response = llm.invoke(prompt)
     topics = [t.strip() for t in response.content.split(";") if t.strip()]
 
-    return {"topics": topics}
+    return {"topics": topics, "logs": ["Paso 2 completado"]}
 
 
 def extract_actions(state: State) -> State:
@@ -75,7 +77,7 @@ def extract_actions(state: State) -> State:
     else:
         action_items = [a.strip() for a in response.content.split("|") if a.strip()]
 
-    return {"action_items": action_items}
+    return {"action_items": action_items, "logs": ["Paso 3 completado"]}
 
 
 def generate_minutes(state: State) -> State:

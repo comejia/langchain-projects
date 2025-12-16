@@ -4,10 +4,10 @@ from meeting_processor import create_workflow, State
 from transcriber import transcribe_media
 
 
-app = create_workflow()
+workflow = create_workflow()
 
 
-def process_meeting_notes(notes: str, app):
+def process_meeting_notes(notes: str, workflow):
     """Procesa una nota de reunión individual."""
 
     initial_state = {
@@ -17,13 +17,14 @@ def process_meeting_notes(notes: str, app):
         "action_items": [],
         "minutes": "",
         "summary": "",
+        "logs": [],
     }
 
     print("\n" + "=" * 60)
     print("🔄 Procesando nota de reunión...")
     print("=" * 60)
 
-    result = app.invoke(initial_state)
+    result = workflow.invoke(initial_state)
     return result
 
 
@@ -55,37 +56,16 @@ def display_results(result: State, meeting_num: int):
     print("\n💡 RESUMEN EJECUTIVO:")
     print(f"   {result['summary']}")
 
+    print("\n📝 LOGS DEL PROCESO:", result["logs"])
+
     print("\n" + "=" * 60)
 
 
 if __name__ == "__main__":
-    app = create_workflow()
+    workflow = create_workflow()
     file_path = "/home/comejia/projects/langchain-project/src/apps/meeting_processor/Simulacion_reunion.mp4"
-
-    # Pequeña interfaz gráfica: selector de archivo
-    # Tk().withdraw()
-    # file_path = filedialog.askopenfilename(
-    #     title="Selecciona un vídeo o transcripción",
-    #     filetypes=[
-    #         ("Vídeo/Audio", "*.mp4 *.mov *.m4a *.mp3 *.wav *.mkv *.webm"),
-    #         ("Texto", "*.txt *.md")
-    #     ]
-    # )
-
-    # if not file_path:
-    #     print("No se seleccionó archivo.")
-    #     raise SystemExit(0)
-
-    # ext = os.path.splitext(file_path)[1].lower()
-    # media_exts = {".mp4", ".mov", ".m4a", ".mp3", ".wav", ".mkv", ".webm"}
-
-    # if ext in media_exts:
-    #     notes = transcribe_media_direct(file_path)
-    # else:
-    #     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-    #         notes = f.read()
 
     notes = transcribe_media(file_path)
 
-    result = process_meeting_notes(notes, app)
+    result = process_meeting_notes(notes, workflow)
     display_results(result, 1)
