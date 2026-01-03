@@ -19,3 +19,5 @@ token.json
 chroma_db/
 
 *.mp4
+
+history.db
