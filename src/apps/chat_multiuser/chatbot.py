@@ -1,0 +1,196 @@
+from langgraph.graph import StateGraph, START, END
+import sqlite3
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langchain_core.messages import HumanMessage, trim_messages
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_openai import ChatOpenAI
+from memory_manager import MemoryManager, MemoryState
+from config import DEFAULT_MODEL, DEFAULT_TEMPERATURE
+import os
+
+
+class Chatbot:
+    def __init__(self, user_id: str):
+        self.user_id = user_id
+        self.memory_manager = MemoryManager(user_id)
+
+        # Configuracion del modelo LLM
+        self.llm = ChatOpenAI(model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE)
+
+        # Template del sistema con contexto dinamico
+        self.system_template = """Eres un asistente personal inteligente y amigable.
+
+Características de tu personalidad:
+- Eres útil, empático y conversacional
+- Recuerdas información importante de conversaciones anteriores
+- Adaptas tu estilo a las preferencias del usuario
+- Eres proactivo ofreciendo sugerencias relevantes
+- Mantienes un tono profesional pero cercano
+
+{context}
+
+Usa esta información para personalizar tus respuestas, pero no menciones explícitamente que tienes memoria a menos que sea relevante para la conversación."""
+
+        # Configuracion del trimming de mensajes para gestion del contexto
+        self.message_trimmer = trim_messages(
+            strategy="last",
+            max_tokens=4000,
+            token_counter=self.llm,
+            start_on="human",
+            include_system=True,
+        )
+
+        # Crear aplicacion de LangGraph
+        self.app = self._create_app()
+
+    def _create_app(self):
+        """Crea la aplicacion de LangGraph con estado extendido."""
+        workflow = StateGraph(state_schema=MemoryState)
+
+        def memory_retrieval_node(state: MemoryState) -> MemoryState:
+            """Nodo de recuperacion de memoria."""
+            messages = state["messages"]
+
+            if not messages:
+                return {"vector_memories": []}
+
+            # Obtener el ultimo mensaje del usuario
+            last_user_message = None
+            for message in reversed(messages):
+                if isinstance(message, HumanMessage):
+                    last_user_message = message
+                    break
+
+            if not last_user_message:
+                return {"vector_memories": []}
+
+            # Buscar memorias vectoriales relevantes
+            relevant_memories = self.memory_manager.search_vector_memories(
+                last_user_message.content
+            )
+
+            return {"vector_memories": relevant_memories}
+
+        def context_optimization_node(state: MemoryState) -> MemoryState:
+            """Nodo de optimizacion del contexto con trim_messages."""
+            messages = state["messages"]
+
+            # Aplicar trimming inteligente
+            trimmed_messages = self.message_trimmer.invoke(messages)
+
+            return {"messages": trimmed_messages}
+
+        def response_generation_node(state: MemoryState) -> MemoryState:
+            """Nodo de generacion de respuesta."""
+            messages = state["messages"]
+            vector_memories = state.get("vector_memories", [])
+
+            if not messages:
+                return {"messages": []}
+
+            # Contruir contexto con memorias vectoriales
+            if vector_memories:
+                context_parts = ["Informacion relevante que recuerdas del usuario:"]
+                for memory in vector_memories:
+                    context_parts.append(f"- {memory}")
+                context = "\n".join(context_parts)
+            else:
+                context = "No hay información previa relevante disponible."
+
+            # Crear el prompt con el contexto dinamico
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    ("system", self.system_template.format(context=context)),
+                    MessagesPlaceholder(variable_name="messages"),
+                ]
+            )
+
+            # Generar la respuesta
+            chain = prompt | self.llm
+            response = chain.invoke({"messages": messages})
+
+            return {"messages": response}
+
+        def memory_extraction_node(state: MemoryState) -> MemoryState:
+            """Nodo que extrae y guarda nuevas memorias vectoriales."""
+            messages = state["messages"]
+
+            last_extraction = state.get("last_memory_extraction", "")
+
+            # Obtener el ultimo mensaje del usuario
+            last_user_message = None
+            for message in reversed(messages):
+                if isinstance(message, HumanMessage):
+                    last_user_message = message
+                    break
+
+            if not last_user_message:
+                return {}
+
+            # Solo procesar si no hemos extraido memorias de este mensaje
+            if last_extraction != last_user_message.content:
+                self.memory_manager.extract_and_store_memories(
+                    last_user_message.content
+                )
+                return {"last_memory_extraction": last_user_message.content}
+
+            return {}
+
+        # Configurar el grafo con flujo secuencial
+        workflow.add_node("memory_retrieval", memory_retrieval_node)
+        workflow.add_node("context_optimization", context_optimization_node)
+        workflow.add_node("response_generation", response_generation_node)
+        workflow.add_node("memory_extraction", memory_extraction_node)
+
+        # Configurar las aristas del grafo
+        workflow.add_edge(START, "memory_retrieval")
+        workflow.add_edge("memory_retrieval", "context_optimization")
+        workflow.add_edge("context_optimization", "response_generation")
+        workflow.add_edge("response_generation", "memory_extraction")
+        workflow.add_edge("memory_extraction", END)
+
+        # Configurar persistencia con SqliteSaver
+        db_path = os.path.join(self.memory_manager.user_dir, "langgraph_memory.db")
+
+        conn = sqlite3.connect(db_path, check_same_thread=False)
+        checkpointer = SqliteSaver(conn)
+
+        return workflow.compile(checkpointer=checkpointer)
+
+    def chat(self, message: str, chat_id: str = "default") -> str:
+        """Realiza una conversacion con el chatbot."""
+        try:
+            # Configuracion para el thread especifico del chat
+            config = {
+                "configurable": {"thread_id": f"user_{self.user_id}_chat_{chat_id}"}
+            }
+
+            # Actualizar el titulo del chat si es necesario
+            chat_info = self.memory_manager.get_chat_info(chat_id)
+            if chat_info["title"] == "Nuevo chat":
+                chat_title = self.memory_manager._generate_chat_title(message)
+                self.memory_manager.update_chat_metadata(chat_id, title=chat_title)
+
+            # Invocar el chatbot con el nuevo mensaje
+            result = self.app.invoke(
+                {"messages": [HumanMessage(content=message)]}, config=config
+            )
+
+            # Extraer respuesta
+            assistant_response = result["messages"][-1].content
+
+            return {
+                "success": True,
+                "response": assistant_response,
+                "error": None,
+                "memories_used": len(result.get("vector_memories", [])),
+                "context_optimized": True,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "response": None,
+                "error": str(e),
+                "memories_used": 0,
+                "context_optimized": False,
+            }
