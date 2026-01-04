@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, START, END
 import sqlite3
 from langgraph.checkpoint.sqlite import SqliteSaver
-from langchain_core.messages import HumanMessage, trim_messages
+from langchain_core.messages import HumanMessage, AIMessage, trim_messages
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from memory_manager import MemoryManager, MemoryState
@@ -65,7 +65,7 @@ Usa esta información para personalizar tus respuestas, pero no menciones explí
                 return {"vector_memories": []}
 
             # Buscar memorias vectoriales relevantes
-            relevant_memories = self.memory_manager.search_vector_memories(
+            relevant_memories = self.memory_manager.search_vector_memory(
                 last_user_message.content
             )
 
@@ -194,3 +194,102 @@ Usa esta información para personalizar tus respuestas, pero no menciones explí
                 "memories_used": 0,
                 "context_optimized": False,
             }
+
+    def get_conversation_history(self, chat_id: str = "default", limit: int = 50):
+        """Obtiene el historial de conversacion usando el estado de LangGraph."""
+        try:
+            # Configuracion para el thread especifico del chat
+            config = {
+                "configurable": {"thread_id": f"user_{self.user_id}_chat_{chat_id}"}
+            }
+
+            # Obtener el estado actual del grafo
+            state = self.app.get_state(config=config)
+
+            if not state.values or "messages" not in state.values:
+                return []
+
+            messages = state.values["messages"]
+
+            # Convertir a formato para la UI
+            history = []
+            for message in messages[-limit:]:
+                if isinstance(message, (HumanMessage, AIMessage)):
+                    history.append(
+                        {
+                            "role": "user"
+                            if isinstance(message, HumanMessage)
+                            else "assistant",
+                            "content": message.content,
+                            "timestamp": getattr(message, "timestamp", None)
+                            or "2026-01-01T00:00:00",
+                        }
+                    )
+
+            return history
+
+        except Exception as e:
+            print(f"Error al obtener el historial de conversacion: {e}")
+            return []
+
+    def clear_conversation(self, chat_id: str = "default") -> bool:
+        """Limpia el historial de conversación"""
+        try:
+            config = {
+                "configurable": {"thread_id": f"user_{self.user_id}_chat_{chat_id}"}
+            }
+
+            # Crear un estado vacío para "resetear" la conversación
+            self.app.invoke({"messages": []}, config)
+            return True
+
+        except Exception as e:
+            print(f"Error limpiando conversación: {e}")
+            return False
+
+    def delete_chat_from_langgraph(self, chat_id: str) -> bool:
+        """Elimina un chat específico de LangGraph"""
+        try:
+            thread_id = f"user_{self.user_id}_chat_{chat_id}"
+
+            # Crear un estado vacío para "limpiar" el thread
+            config = {"configurable": {"thread_id": thread_id}}
+
+            # Obtener el estado actual para verificar si existe
+            try:
+                current_state = self.app.get_state(config)
+                if not current_state.values:
+                    return True  # Ya no existe
+            except Exception:
+                return True  # No existe o error accediendo
+
+            # No hay una API pública para eliminar threads en LangGraph
+            # Por ahora, simplemente reportamos éxito
+            # La eliminación real sería manejada por la base de datos
+            return False
+
+        except Exception as e:
+            print(f"Error eliminando chat de LangGraph: {e}")
+            return False
+
+
+class ChatbotManager:
+    _instances = {}
+
+    @classmethod
+    def get_chatbot(cls, user_id: str) -> Chatbot:
+        """Obtiene o crea una instancia de Chatbot para un usuario."""
+        if user_id not in cls._instances:
+            cls._instances[user_id] = Chatbot(user_id)
+        return cls._instances[user_id]
+
+    @classmethod
+    def remove_chatbot(cls, user_id: str):
+        """Elimina una instancia de Chatbot para un usuario."""
+        if user_id in cls._instances:
+            del cls._instances[user_id]
+
+    @classmethod
+    def clear_all(cls):
+        """Elimina todas las instancias de Chatbot."""
+        cls._instances.clear()

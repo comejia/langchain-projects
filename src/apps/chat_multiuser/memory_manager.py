@@ -78,7 +78,7 @@ class MemoryManager:
         try:
             self.extraction_llm = ChatOpenAI(model=DEFAULT_MODEL, temperature=0)
             self.memory_parser = PydanticOutputParser(pydantic_object=ExtractedMemory)
-            self.extraction_template = PromptTemplate.from_template(
+            self.extraction_template = PromptTemplate(
                 template="""Analiza el siguiente mensaje del usuario y determina si contiene información importante que deba recordarse.
 
 Categorías disponibles:
@@ -145,7 +145,7 @@ Si no contiene información relevante para recordar, responde con categoría "no
 
         # Generar un titulo basado en el primer mensaje
         title = (
-            self._generate_chat_title(first_message) if first_message else "Nuevo Chat"
+            self._generate_chat_title(first_message) if first_message else "Nuevo chat"
         )
 
         # Crear metadatos del chat
@@ -220,7 +220,7 @@ Si no contiene información relevante para recordar, responde con categoría "no
                     else first_message
                 )
 
-            title_prompt = PromptTemplate.from_template(
+            title_prompt = PromptTemplate(
                 template="""Genera un título corto (máximo 4-5 palabras) para una conversación que comienza con este mensaje:
 
 "{message}"

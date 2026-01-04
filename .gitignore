@@ -21,3 +21,5 @@ chroma_db/
 *.mp4
 
 history.db
+
+src/apps/chat_multiuser/data/users
