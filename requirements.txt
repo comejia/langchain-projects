@@ -173,7 +173,9 @@ bcrypt==5.0.0 \
 beautifulsoup4==4.14.2 \
     --hash=sha256:2a98ab9f944a11acee9cc848508ec28d9228abfd522ef0fad6a02a72e0ded69e \
     --hash=sha256:5ef6fa3a8cbece8488d66985560f97ed091e22bbc4e9c2338508a9d5de6d4515
-    # via langchain-project
+    # via
+    #   langchain-project
+    #   wikipedia
 blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
@@ -703,7 +705,9 @@ langchain-chroma==0.2.6 \
 langchain-community==0.3.31 \
     --hash=sha256:1c727e3ebbacd4d891b07bd440647668001cea3e39cbe732499ad655ec5cb569 \
     --hash=sha256:250e4c1041539130f6d6ac6f9386cb018354eafccd917b01a4cff1950b80fd81
-    # via langchain-google-community
+    # via
+    #   langchain-experimental
+    #   langchain-google-community
 langchain-core==0.3.78 \
     --hash=sha256:a174a2061f8659b916fd2b1c7d174b3ddd07be7ca45a07aaec442696df5101b6 \
     --hash=sha256:dafc4f7e9fd008f680bf0ffe5904dbaa45992abdb92627b68eccb7b4089cbbf0
@@ -711,6 +715,7 @@ langchain-core==0.3.78 \
     #   langchain
     #   langchain-chroma
     #   langchain-community
+    #   langchain-experimental
     #   langchain-google-community
     #   langchain-google-genai
     #   langchain-openai
@@ -718,6 +723,10 @@ langchain-core==0.3.78 \
     #   langgraph
     #   langgraph-checkpoint
     #   langgraph-prebuilt
+langchain-experimental==0.3.4 \
+    --hash=sha256:2e587306aea36b60fa5e5fc05dc7281bee9f60a806f0bf9d30916e0ee096af80 \
+    --hash=sha256:937c4259ee4a639c618d19acf0e2c5c2898ef127050346edc5655259aa281a21
+    # via langchain-project
 langchain-google-community==2.0.10 \
     --hash=sha256:5476adfa3b64cc2ce52c1fd514d0b1eab8775c4416a9dc555423f387fafd842f \
     --hash=sha256:9afb3eba04359670ba5797efc2ed8a1749a3de706a17c21f85173b31e4b5474a
@@ -1821,6 +1830,7 @@ requests==2.32.5 \
     #   requests-toolbelt
     #   streamlit
     #   tiktoken
+    #   wikipedia
 requests-oauthlib==2.0.0 \
     --hash=sha256:7dd8a5c40426b779b0868c404bdef9768deccf22749cde15852df527e6269b36 \
     --hash=sha256:b3dffaebd884d8cd778494369603a9e7b58d29111bf6b41bdc2dcd87203af4e9
@@ -2265,6 +2275,9 @@ websockets==15.0.1 \
     --hash=sha256:f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f \
     --hash=sha256:fcd5cf9e305d7b8338754470cf69cf81f420459dbae8a3b40cee57417f4614a7
     # via uvicorn
+wikipedia==1.4.0 \
+    --hash=sha256:db0fad1829fdd441b1852306e9856398204dc0786d2996dd2e0c8bb8e26133b2
+    # via langchain-project
 xxhash==3.6.0 \
     --hash=sha256:01262da8798422d0685f7cef03b2bd3f4f46511b02830861df548d7def4402ad \
     --hash=sha256:01362c4331775398e7bb34e3ab403bc9ee9f7c497bc7dee6272114055277dd3c \
