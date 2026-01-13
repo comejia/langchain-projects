@@ -723,6 +723,7 @@ langchain-core==0.3.78 \
     #   langgraph
     #   langgraph-checkpoint
     #   langgraph-prebuilt
+    #   langgraph-supervisor
 langchain-experimental==0.3.4 \
     --hash=sha256:2e587306aea36b60fa5e5fc05dc7281bee9f60a806f0bf9d30916e0ee096af80 \
     --hash=sha256:937c4259ee4a639c618d19acf0e2c5c2898ef127050346edc5655259aa281a21
@@ -746,7 +747,9 @@ langchain-text-splitters==0.3.11 \
 langgraph==1.0.1 \
     --hash=sha256:4985b32ceabb046a802621660836355dfcf2402c5876675dc353db684aa8f563 \
     --hash=sha256:892f04f64f4889abc80140265cc6bd57823dd8e327a5eef4968875f2cd9013bd
-    # via langchain-project
+    # via
+    #   langchain-project
+    #   langgraph-supervisor
 langgraph-checkpoint==3.0.1 \
     --hash=sha256:59222f875f85186a22c494aedc65c4e985a3df27e696e5016ba0b98a5ed2cee0 \
     --hash=sha256:9b04a8d0edc0474ce4eaf30c5d731cee38f11ddff50a6177eead95b5c4e4220b
@@ -766,6 +769,10 @@ langgraph-sdk==0.2.10 \
     --hash=sha256:9aef403663726085de6851e4e50459df9562069bd316dd0261eb359f776fd0ef \
     --hash=sha256:ab58331504fbea28e6322037aa362929799b4e9106663ac1dbd7c5ac44558933
     # via langgraph
+langgraph-supervisor==0.0.28 \
+    --hash=sha256:4daaeef17dadf2fe701b7d8ff1b76623dafd80a0a605870c163f67a18f30641e \
+    --hash=sha256:58af7c66fd184bf8adaff14ea31270ba576ae0b6809537a74b9fa6cc217b28e3
+    # via langchain-project
 langsmith==0.4.32 \
     --hash=sha256:5c4dcaa5049360bd126fec2fd59af703294e08c75c8d5363261f71a941fa2963 \
     --hash=sha256:a90bb8297fe0d3c63d9868ea58fe46c52d7e2d1f06b614e43c6a78c948275f24
